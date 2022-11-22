@@ -3,10 +3,12 @@
 // contracts/BuyMeACoffee.sol
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 // Switch this to your own contract address once deployed, for bookkeeping!
 // Example Contract Address on Goerli: 0xDBa03676a2fBb6711CB652beF5B7416A53c1421D
 
-contract BuyMeACoffee {
+contract BuyMeACoffee is Ownable {
     // Event to emit when a Memo is created.
     event NewMemo(
         address indexed from,
@@ -25,7 +27,8 @@ contract BuyMeACoffee {
     
     // Address of contract deployer. Marked payable so that
     // we can withdraw to this address later.
-    address payable owner;
+
+    address payable withdrawer;
 
     // List of all memos received from coffee purchases.
     Memo[] memos;
@@ -33,7 +36,7 @@ contract BuyMeACoffee {
     constructor() {
         // Store the address of the deployer as a payable address.
         // When we withdraw funds, we'll withdraw here.
-        owner = payable(msg.sender);
+        withdrawer = payable(owner()); // init he withdrawer with owner adddress
     }
 
     /**
@@ -67,12 +70,17 @@ contract BuyMeACoffee {
             _name,
             _message
         );
+
     }
 
     /**
      * @dev send the entire balance stored in this contract to the owner
      */
     function withdrawTips() public {
-        require(owner.send(address(this).balance));
+        require(withdrawer.send(address(this).balance));
+    }
+
+    function updateWithDrawer(address newWithdrawer) onlyOwner public {
+        withdrawer = payable(newWithdrawer);
     }
 }
